@@ -3,6 +3,28 @@ import { Client } from "@gradio/client";
 import { resolve } from "path";
 import fs from "fs/promises"; // Use promises for cleaner async/await
 
+// Function to check if the Gradio server is active
+function checkServerAndRun() {
+  exec("ping -c 1 http://127.0.0.1:7860/", (error, stdout, stderr) => {
+    if (error) {
+      console.log("Server inactive. Attempting to start the server...");
+      // Spawn a Python process to start the Gradio server
+      exec("python3 yolo/main.py", (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Failed to start server: ${error}`);
+          return;
+        }
+        console.log("Server started successfully.");
+      });
+    } else {
+      console.log("Server is active.");
+    }
+  });
+}
+
+checkServerAndRun();
+
+
 exec("fswebcam snap.jpg", async (error, stdout, stderr) => {
   if (error) {
     console.error(`Error executing command: ${error}`);
