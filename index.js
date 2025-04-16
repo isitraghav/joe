@@ -7,33 +7,8 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 const serverUrl = "http://127.0.0.1:7860/";
 const snapshotFilename = "snap.jpg";
-const pythonServerCommand = "python3 yolo/main.py";
 const cameraCommand = `libcamera-still -o ${snapshotFilename} --immediate`;
 const predictEndpoint = "/predict";
-
-async function isServerActive() {
-  try {
-    await execAsync(`ping -c 1 ${serverUrl}`);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function startServer() {
-  console.log("Server inactive. Attempting to start the server...");
-  try {
-    const { stdout, stderr } = await execAsync(pythonServerCommand);
-    console.log("Server started successfully.");
-    if (stdout) console.log("Server Output:", stdout);
-    if (stderr) console.error("Server Errors:", stderr);
-    // Consider adding a delay here to allow the server to fully start
-    await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds
-  } catch (error) {
-    console.error(`Failed to start server: ${error}`);
-    throw error; // Re-throw the error to stop further execution
-  }
-}
 
 async function takeSnapshot() {
   try {
@@ -84,13 +59,6 @@ async function runGradioClient() {
 
 async function main() {
   try {
-    const serverIsActive = await isServerActive();
-    if (!serverIsActive) {
-      await startServer();
-    } else {
-      console.log("Server is active.");
-    }
-
     await takeSnapshot();
     await runGradioClient();
   } catch (error) {
@@ -99,3 +67,4 @@ async function main() {
 }
 
 main();
+
