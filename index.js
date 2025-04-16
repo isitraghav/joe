@@ -24,7 +24,6 @@ function checkServerAndRun() {
 
 checkServerAndRun();
 
-
 exec("fswebcam snap.jpg", async (error, stdout, stderr) => {
   if (error) {
     console.error(`Error executing command: ${error}`);
@@ -38,6 +37,23 @@ exec("fswebcam snap.jpg", async (error, stdout, stderr) => {
     "Successfully took a snapshot (if fswebcam is installed and configured)."
   );
 
+  
+  exec(
+    "libcamera-still -o snap.jpg --immediate",
+    async (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing command: ${error}`);
+        return;
+      }
+      console.log(`Command output:\n${stdout}`);
+      if (stderr) {
+        console.error(`Command errors:\n${stderr}`);
+      }
+      console.log(
+        "Successfully took a snapshot (if libcamera-still is installed and configured)."
+      );
+    }
+  );
   // Move the Gradio client code inside the callback to ensure snap.jpg exists
   async function runGradioClient() {
     try {
