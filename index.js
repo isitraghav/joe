@@ -25,7 +25,7 @@ function checkServerAndRun() {
 checkServerAndRun();
 
 exec(
-  "fswebcam snap.jpg;libcamera-still -o snap.jpg --immediate",
+  "libcamera-still -o snap.jpg --immediate",
   async (error, stdout, stderr) => {
     if (error) {
       console.error(`Error executing command: ${error}`);
