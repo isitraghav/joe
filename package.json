@@ -13,6 +13,7 @@
     "@tensorflow/tfjs-node": "^4.22.0",
     "express": "^5.1.0",
     "pi-camera": "^1.7.0",
+    "pigpio": "^3.3.1",
     "raspicam": "^0.2.14"
   },
   "devDependencies": {

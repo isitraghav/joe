@@ -37,13 +37,14 @@ def classify_image(image):
 
             # Determine the column (Left or Right) based on the center x-coordinate
             if center_x < mid_column:
-                column = "Left"
+                column = "left"
             else:
-                column = "Right"
+                column = "right"
 
-            detections_info += f"Object {i+1}: Label: {class_name}, Center: ({center_x}, {center_y}), Column: {column}\n"
+            if class_name == "person": # for now
+                detections_info = column
     else:
-        detections_info = "No objects detected."
+        detections_info = "none"
 
     return annotated_image, detections_info
 

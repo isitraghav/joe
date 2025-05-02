@@ -14,7 +14,7 @@ source venv/bin/activate
 
 # Install dependencies from requirements.txt
 echo "Installing dependencies from requirements.txt..."
-pip install -r requirements.txt
+#pip install -r requirements.txt
 
 # Run the Gradio application
 echo "Running the Gradio YOLO application..."
