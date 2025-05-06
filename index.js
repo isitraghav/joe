@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { Client } from "@gradio/client";
-import { resolve } from "path";
+import path, { resolve } from "path";
 import fs from "fs/promises"; // Use promises for cleaner async/await
 import { promisify } from "util";
 
@@ -91,43 +91,33 @@ async function setServoTo(dir) {
   servo.servoWrite(STOP);
 }
 
-const servo2 = new Gpio(15, { mode: Gpio.OUTPUT });
+// import { spawn } from 'child_process';
 
-// Adjust these values based on your servo
-// const STOP      = 1500; // neutral = no motion
-let SPEED_CW = 500; // clockwise rotation (increase for faster)
-let RUN_TIME = 2000; // run for 2000 ms (2 seconds)
+// async function runServo() {
+//   return new Promise((resolve, reject) => {
+//     const nodeBin = process.execPath;                   // e.g. "/usr/bin/node"
+//     const proc = spawn('sudo', [nodeBin, "/home/pi/Desktop/joe/servo.js"], {
+//       stdio: 'inherit'
+//     });
 
-async function runServo2Seconds() {
-  servo2.servoWrite(0);
-  SPEED_CW = 500;
-  return new Promise(async (resolve) => {
-    console.log('? Starting servo on GPIO 15...');
-    while (SPEED_CW < 2500) {
-      servo2.servoWrite(SPEED_CW);
-      await new Promise(r => setTimeout(r, 500));
-      servo2.servoWrite(0);
-      SPEED_CW = SPEED_CW + 100
-    }
-
-    // Run for 2 seconds
-    setTimeout(() => {
-      console.log('? Stopping servo');
-      servo2.servoWrite(STOP);
-      resolve(true);
-    }, RUN_TIME);
-  });
-}
+//     proc.on('error', reject);
+//     proc.on('close', code =>
+//       code === 0
+//         ? resolve()
+//         : reject(new Error(`servo.js exited with code ${code}`))
+//     );
+//   });
+// }
 
 
 
 async function main() {
   try {
-    while (true) {
-      await runServo2Seconds();
-      await takeSnapshot();
-      await runGradioClient();
-    }
+    // while (true) {
+    // await runServo();
+    await takeSnapshot();
+    await runGradioClient();
+    // }
     // await operateServo()
   } catch (error) {
     console.error("An error occurred during the process:", error);
