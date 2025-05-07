@@ -18,7 +18,7 @@ async function runServo2Seconds() {
             console.log('? Stopping servo');
             servo.servoWrite(1500);
             resolve(true);
-        }, 200);
+        }, 1000);
     });
 }
 

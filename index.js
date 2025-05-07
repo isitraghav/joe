@@ -74,6 +74,7 @@ const CCW_SPEED = 1000;  // ditto for reverse direction
 
 async function setServoTo(dir) {
   return new Promise(async (res) => {
+    servo.servoWrite(STOP);
     if (dir == "none") return;
     // const dir = (process.argv[2] || '').toLowerCase();
     let pulse;
