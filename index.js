@@ -7,7 +7,7 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 const serverUrl = "http://127.0.0.1:7860/";
 const snapshotFilename = "snap.jpg";
-const cameraCommand = `libcamera-still -o ${snapshotFilename} --immediate`;
+const cameraCommand = `libcamera-still -o ${snapshotFilename} --immediate --width 640 --height 640`;
 const predictEndpoint = "/predict";
 
 async function takeSnapshot() {
@@ -73,22 +73,25 @@ const CW_SPEED = 2000;  // adjust up/down 50?�s until it spins at the speed yo
 const CCW_SPEED = 1000;  // ditto for reverse direction
 
 async function setServoTo(dir) {
-  if (dir == "none") return;
-  // const dir = (process.argv[2] || '').toLowerCase();
-  let pulse;
-  if (dir === 'left') {
-    pulse = CCW_SPEED;
-  } else if (dir === 'right') {
-    pulse = CW_SPEED;
-  }
+  return new Promise(async (res) => {
+    if (dir == "none") return;
+    // const dir = (process.argv[2] || '').toLowerCase();
+    let pulse;
+    if (dir === 'left') {
+      pulse = CCW_SPEED;
+    } else if (dir === 'right') {
+      pulse = CW_SPEED;
+    }
 
-  console.log(`? Spinning ${dir} (pulse = ${pulse}?�s)`);
-  servo.servoWrite(pulse);
+    console.log(`? Spinning ${dir} (pulse = ${pulse}?�s)`);
+    servo.servoWrite(pulse);
 
-  // run for 3?s, then brake
-  await new Promise(r => setTimeout(r, 3000));
-  console.log('? Stopping');
-  servo.servoWrite(STOP);
+    // run for 3?s, then brake
+    await new Promise(r => setTimeout(r, 3000));
+    console.log('? Stopping');
+    servo.servoWrite(STOP);
+    res();
+  })
 }
 
 // import { spawn } from 'child_process';

@@ -2,20 +2,28 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# 1) Run your main app
-echo "? Starting index.js?"
-if sudo node index.js; then
-  echo "? index.js completed successfully."
-else
-  echo "? index.js failed with exit code $?. Aborting." >&2
-  exit 1
-fi
+# 0) Run setup in background
+echo "? Starting YOLO setup in background..."
+(cd yolo && ./setup.sh) &
 
-# 2) Now invoke the servo script as sudo
-echo "? Running servo.js with sudo?"
-if sudo node servo.js; then
-  echo "? servo.js completed successfully."
-else
-  echo "? servo.js failed with exit code $?."
-  exit 1
-fi
+# 1) Loop the main app logic
+while true; do
+  echo "?? Starting index.js"
+  if sudo node index.js; then
+    echo "? index.js completed successfully."
+  else
+    echo "? index.js failed with exit code $? ? aborting loop." >&2
+    exit 1
+  fi
+
+  echo "?? Running servo.js with sudo"
+  if sudo node servo.js; then
+    echo "? servo.js completed successfully."
+  else
+    echo "? servo.js failed with exit code $? ? aborting loop." >&2
+    exit 1
+  fi
+
+  # Optional: Add sleep if you want a pause between loops
+  # sleep 2
+done
