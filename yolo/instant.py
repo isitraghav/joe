@@ -1,71 +1,68 @@
-#!/usr/bin/env python3
-"""
-Simple Video Capture and Display Script with GUI Support on Raspberry Pi
-
-This script captures video from the default camera (/dev/video0) and displays it in a window.
-
-Setup Instructions:
-
-1. **Enable the camera interface**:
-   ```bash
-   sudo raspi-config nonint do_camera 0
-   reboot
-   ```
-
-2. **Install GUI and V4L2 dependencies** (for OpenCV window functions):
-   ```bash
-   sudo apt update && sudo apt install -y \
-     python3-opencv libopencv-dev libgtk2.0-dev pkg-config v4l-utils
-   ```
-
-3. **Verify your camera**:
-   ```bash
-   v4l2-ctl --list-devices
-   ls /dev/video*
-   v4l2-ctl --device=/dev/video0 --list-formats-ext
-   ```
-
-   Ensure `/dev/video0` appears and supports the desired resolution.
-
-4. **Run the script**:
-   ```bash
-   python3 simple_capture.py
-   ```
-
-Usage:
-- Press **q** in the video window to exit cleanly.
-"""
 import cv2
+import numpy as np
+from ultralytics import YOLO
 
-def main():
-    # Try to open the camera with V4L2 backend for better compatibility
-    cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
-    if not cap.isOpened():
-        print("Error: Cannot open camera at /dev/video0. Check connection and permissions.")
-        return
+# Load the pre-trained YOLOv8 model
+model = YOLO('yolov8n.pt')
 
-    # Set resolution explicitly to a safe value
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# Initialize video capture (0 = default webcam)
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Error: Could not open webcam.")
+    exit(1)
 
-    print("Press 'q' in the window to exit.")
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Error: Cannot receive frame (camera read failed).")
-            break
-
-        # Display frame
-        cv2.imshow('Video', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release resources
+# Get frame width for column division
+ret, frame = cap.read()
+if not ret:
+    print("Error: Could not read frame.")
     cap.release()
-    try:
-        cv2.destroyAllWindows()
-    except Exception:
-        pass  # ignore if GUI backend is missing
+    exit(1)
+height, width = frame.shape[:2]
+mid_x = width // 2
 
-if __name__ == '__main__':
-    main()
+print("Press 'q' to quit.")
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # YOLO expects RGB images
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Perform inference
+    results = model.predict(rgb_frame, verbose=False)[0]
+
+    # Draw midline for left/right column (optional)
+    cv2.line(frame, (mid_x, 0), (mid_x, height), (255, 255, 255), 2)
+
+    # Iterate over detections
+    for box in results.boxes:
+        # Extract coordinates and class
+        x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
+        cls_id = int(box.cls[0])
+        label = model.names[cls_id]
+
+        # Compute center and column
+        center_x = (x1 + x2) // 2
+        column = 'Left' if center_x < mid_x else 'Right'
+
+        # Draw bounding box
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        # Prepare text and put on frame
+        text = f"{label}: {column}"
+        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.rectangle(frame, (x1, y1 - th - 4), (x1 + tw, y1), (0, 255, 0), -1)
+        cv2.putText(frame, text, (x1, y1 - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+
+    # Display the result
+    cv2.imshow('YOLOv8 Detection', frame)
+
+    # Exit on 'q' key
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Clean up
+cap.release()
+cv2.destroyAllWindows()
