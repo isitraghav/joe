@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 
 # Load a pre-trained YOLO model
-model = YOLO('yolov8n.pt')
+model = YOLO('487075bc-075a-4b6b-bf39-6a6b83121564.pt')
 
 def classify_image(image):
     """
@@ -41,8 +41,8 @@ def classify_image(image):
             else:
                 column = "right"
 
-            if class_name == "person": # for now
-                detections_info = column
+            # if class_name == "person": # for now
+            detections_info = class_name
     else:
         detections_info = "none"
 

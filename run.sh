@@ -2,33 +2,52 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# 0) Check if port 7860 is busy
-echo "?? Checking if http://127.0.0.1:7860 is already in use..."
-if ss -ltn | grep -q ':7860'; then
-  echo "?? Port 7860 is already in use, skipping YOLO setup."
+# 0) Ensure YOLO is always restarted if port 7860 is busy
+echo "🔍 Checking YOLO port (7860)..."
+if ss -ltnp | grep -q ':7860'; then
+  echo "⚠️ Port 7860 is in use. Killing existing process..."
+  # get PID(s) listening on 7860 and kill them
+  ss -ltnp | awk '/:7860/ { gsub(/.*pid=/,""); gsub(/,.*/,""); print $0 }' | xargs -r sudo kill -9
+  echo "▶️ Restarting YOLO..."
+  (cd yolo && ./setup.sh) &
 else
-  echo "?? Starting YOLO setup in background..."
+  echo "✅ Port 7860 free. Starting YOLO..."
   (cd yolo && ./setup.sh) &
 fi
 
-# 1) Loop the main app logic
+# 1) Main loop
 while true; do
-  echo "?? Starting index.js"
-  if sudo node index.js; then
-    echo "? index.js completed successfully."
+  echo "🚀 Running index.js..."
+  # capture both stdout+stderr
+  if output=$(sudo node index.js 2>&1); then
+    echo "$output"
+    echo "✔️ index.js succeeded."
   else
-    echo "? index.js failed with exit code $? � aborting loop." >&2
-    exit 1
+    rc=$?
+    echo "$output"
+    echo "❌ index.js failed (exit code $rc). Aborting." >&2
+    exit $rc
   fi
 
-  echo "?? Running servo.js with sudo"
-  if sudo node servo.js; then
-    echo "? servo.js completed successfully."
+  # 2) Decide which servo to run based on detection output
+  if printf "%s" "$output" | grep -qP 'none'; then
+    echo "ℹ️ Detected “none” → running servo_small_step..."
+    if sudo node servo_small_step; then
+      echo "✔️ servo_small_step completed."
+    else
+      echo "❌ servo_small_step failed. Aborting." >&2
+      exit 1
+    fi
   else
-    echo "? servo.js failed with exit code $? � aborting loop." >&2
-    exit 1
+    echo "ℹ️ Detection present → running servo..."
+    if sudo node servo; then
+      echo "✔️ servo completed."
+    else
+      echo "❌ servo failed. Aborting." >&2
+      exit 1
+    fi
   fi
 
-  # Optional pause between runs
+  # Optional delay between iterations
   # sleep 2
 done

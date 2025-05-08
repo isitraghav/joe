@@ -1,5 +1,5 @@
 import { Gpio } from "pigpio"
-const servo = new Gpio(15, { mode: Gpio.OUTPUT });
+const servo = new Gpio(12, { mode: Gpio.OUTPUT });
 
 let SPEED_CW = 500; // clockwise rotation (increase for faster)
 
@@ -18,7 +18,7 @@ async function runServo2Seconds() {
             console.log('? Stopping servo');
             servo.servoWrite(1500);
             resolve(true);
-        }, 1000);
+        }, 2000);
     });
 }
 

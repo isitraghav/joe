@@ -5,9 +5,9 @@ import fs from "fs/promises"; // Use promises for cleaner async/await
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
-const serverUrl = "http://127.0.0.1:7860/";
+const serverUrl = "http://127.0.0.1:7861/";
 const snapshotFilename = "snap.jpg";
-const cameraCommand = `libcamera-still -o ${snapshotFilename} --immediate --width 640 --height 640`;
+const cameraCommand = `libcamera-still -o ${snapshotFilename} --immediate --width 900 --height 900`;
 const predictEndpoint = "/predict";
 
 async function takeSnapshot() {
@@ -38,7 +38,7 @@ async function runGradioClient() {
       const annotatedImage = result.data[0];
       const detectionInfo = result.data[1];
 
-      console.log("Annotated Image:", annotatedImage);
+      // console.log("Annotated Image:", annotatedImage);
       console.log("Detection Information:");
       const lines = detectionInfo
         .split("\n")
@@ -63,11 +63,6 @@ async function runGradioClient() {
 import { Gpio } from "pigpio"
 
 const servo = new Gpio(18, { mode: Gpio.OUTPUT });
-
-// === CALIBRATE THESE ===
-// STOP should be the pulse width (�s) that *just* stops your servo.
-// CW_SPEED is a bit above STOP to spin one way.
-// CCW_SPEED is a bit below STOP to spin the other.
 const STOP = 1500;
 const CW_SPEED = 2000;  // adjust up/down 50?�s until it spins at the speed you like
 const CCW_SPEED = 1000;  // ditto for reverse direction
@@ -78,9 +73,9 @@ async function setServoTo(dir) {
     if (dir == "none") return;
     // const dir = (process.argv[2] || '').toLowerCase();
     let pulse;
-    if (dir === 'left') {
+    if (dir === 'electro') { //left
       pulse = CCW_SPEED;
-    } else if (dir === 'right') {
+    } else if (dir === 'scrap') { //right
       pulse = CW_SPEED;
     }
 
@@ -88,9 +83,6 @@ async function setServoTo(dir) {
     servo.servoWrite(pulse);
 
     // run for 3?s, then brake
-    await new Promise(r => setTimeout(r, 3000));
-    console.log('? Stopping');
-    servo.servoWrite(STOP);
     res();
   })
 }
